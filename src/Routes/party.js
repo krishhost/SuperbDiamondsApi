@@ -1,11 +1,13 @@
-// const express = require("express");
-// const { GetParty, AddParty } = require("../Controller/auth");
-// const { authenticate } = require("../utils/jwt");
+const express = require("express");
+const { ListParties, AddParty, UpdateParty, DeleteParty } = require("../Controller/party");
+const { authenticate } = require("../utils/jwt");
 
-// const router = express.Router();
-// router.use(authenticate);
+const router = express.Router();
 
-// router.post("/party/:identifier", AddParty);
-// router.get("/party/:identifier", GetParty);
+router.use(authenticate);
+router.get("/", ListParties);
+router.post("/", AddParty);
+router.put("/:id", UpdateParty);
+router.delete("/:id", DeleteParty);
 
-// module.exports = router;
+module.exports = router;
