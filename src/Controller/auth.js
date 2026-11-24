@@ -14,12 +14,17 @@ const MIN_PASSWORD = 6;
 
 const normEmail = (email) => String(email || "").trim().toLowerCase();
 
-/** Find a user by username or phone number (the two login identifiers). */
-const findByIdentifier = (identifier) =>
-  isNaN(identifier) ? User.findOne({ user_name: identifier }) : User.findOne({ phone_number: identifier });
-
 /** Case-insensitive email lookup (older accounts may have mixed-case emails). */
-const findByEmail = (email) => User.findOne({ email }).collation({ locale: "en", strength: 2 });
+const findByEmailCI = (email) => User.findOne({ email }).collation({ locale: "en", strength: 2 });
+
+/** Find a user by email, username or phone number (any of these can be used to log in). */
+const findByIdentifier = (identifier) => {
+  const id = String(identifier).trim();
+  if (id.includes("@")) return findByEmailCI(id.toLowerCase());
+  return isNaN(id) ? User.findOne({ user_name: id }) : User.findOne({ phone_number: id });
+};
+
+const findByEmail = findByEmailCI;
 
 const publicUser = (user) => {
   const { password, confirm_password, __v, ...data } = user.toObject();
@@ -187,7 +192,7 @@ const LogIn = async (req, res) => {
     const user = await findByIdentifier(String(login_variable).trim());
     // Same message for unknown user and wrong password, so accounts can't be probed.
     if (!user || !comparePass(password, user.password)) {
-      return res.status(401).json({ message: "Incorrect username/phone number or password" });
+      return res.status(401).json({ message: "Incorrect email, username/phone number or password" });
     }
 
     // Only block when an end date is actually set and has passed.
